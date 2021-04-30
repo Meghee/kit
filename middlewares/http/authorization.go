@@ -1,4 +1,4 @@
-package chi
+package http
 
 import (
 	"context"

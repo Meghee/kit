@@ -32,6 +32,12 @@ var FuncMap = template.FuncMap{
 		}
 		return total
 	},
+	"subtractInts": func(x, y int) int {
+		return x - y
+	},
+	"divideInts": func(x, y int) int {
+		return x / y
+	},
 	"roundFloat": func(num float64) float64 {
 		return math.Ceil(num)
 	},
@@ -59,8 +65,25 @@ var FuncMap = template.FuncMap{
 		}
 		return strings.ReplaceAll(string(jsonData), "\"", "'")
 	},
-	"StrToUpper":  strings.ToUpper,
-	"StrToLower":  strings.ToLower,
-	"StrContains": strings.Contains,
-	"StrIndex":    strings.Index,
+	"StrToUpper":     strings.ToUpper,
+	"StrToLower":     strings.ToLower,
+	"StrContains":    strings.Contains,
+	"StrIndex":       strings.Index,
+	"StrToTitle":     strings.ToTitle,
+	"StrTitle":       strings.Title,
+	"StrTrim":        strings.Trim,
+	"StrTrimLeft":    strings.TrimLeft,
+	"StrTrimPrefix":  strings.TrimPrefix,
+	"StrTrimRight":   strings.TrimRight,
+	"StrTrimSpace":   strings.TrimSpace,
+	"StrTrimSuffix":  strings.TrimSuffix,
+	"StrRepeat":      strings.Repeat,
+	"StrReplace":     strings.Replace,
+	"Join":           strings.Join,
+	"StrCompare":     strings.Compare,
+	"StrContainsAny": strings.ContainsAny,
+	"StrCount":       strings.Count,
+	"StrEqualFold":   strings.EqualFold,
+	"StrHasPrefix":   strings.HasPrefix,
+	"StrHasSuffix":   strings.HasSuffix,
 }

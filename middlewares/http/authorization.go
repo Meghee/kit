@@ -20,7 +20,7 @@ var (
 func HasValidJWT(notAuthorizedHandler http.HandlerFunc) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			jwtToken, jwtPayload, err := retrieveJWTFromHeader(w, r, notAuthorizedHandler)
+			jwtToken, jwtPayload, err := RetrieveJWTFromHTTPHeader(w, r, notAuthorizedHandler)
 			if err != nil {
 				notAuthorizedHandler(w, r)
 				return
@@ -39,25 +39,19 @@ func HasValidJWT(notAuthorizedHandler http.HandlerFunc) func(next http.Handler) 
 func JWTIndexIS(index string, value interface{}, notAuthorizedHandler http.HandlerFunc) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			jwtToken, jwtPayload, err := retrieveJWTFromHeader(w, r, notAuthorizedHandler)
-			if err != nil {
-				notAuthorizedHandler(w, r)
-				return
-			}
+			jwtPayload := r.Context().Value(JWTPayloadCtxKey).(map[string]interface{})
 			if jwtPayload[index] != value {
 				notAuthorizedHandler(w, r)
 				return
 			}
-			jwtCtx := context.WithValue(r.Context(), JWTCtxKey, jwtToken)
-			jwtPayloadCtx := context.WithValue(jwtCtx, JWTPayloadCtxKey, jwtPayload)
-			next.ServeHTTP(w, r.WithContext(jwtPayloadCtx))
+			next.ServeHTTP(w, r.WithContext(r.Context()))
 		})
 	}
 }
 
-// retrieveJWTFromHeader retrieves the jwt token from the http 'Authorization'
+// RetrieveJWTFromHTTPHeader retrieves the jwt token from the http 'Authorization'
 // header.
-func retrieveJWTFromHeader(w http.ResponseWriter, r *http.Request, notAuthorizedHandler http.HandlerFunc) (string, map[string]interface{}, error) {
+func RetrieveJWTFromHTTPHeader(w http.ResponseWriter, r *http.Request, notAuthorizedHandler http.HandlerFunc) (string, map[string]interface{}, error) {
 	authorization := r.Header.Get("Authorization")
 	if len(authorization) < len("Bearer ")+1 {
 		notAuthorizedHandler(w, r)

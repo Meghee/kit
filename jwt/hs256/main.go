@@ -2,13 +2,16 @@ package hs256
 
 import (
 	"errors"
+	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 )
 
+var secretKey = []byte(os.Getenv("JWT_SECRET_KEY"))
+
 // Encode encodes a jwt token using data gotten from payload.
-func Encode(payload map[string]interface{}, secretKey []byte) (tokenString string, err error) {
+func Encode(payload map[string]interface{}) (tokenString string, err error) {
 	claims := jwt.MapClaims{
 		"iat": time.Now(),
 	}
@@ -23,7 +26,7 @@ func Encode(payload map[string]interface{}, secretKey []byte) (tokenString strin
 // Decode decodes a jwt token string.
 //
 // If the jwt token is invalid it returns an error.
-func Decode(tokenString string, secretKey []byte) (claims map[string]interface{}, err error) {
+func Decode(tokenString string) (claims map[string]interface{}, err error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return "", errors.New("Invalid jwt token string")

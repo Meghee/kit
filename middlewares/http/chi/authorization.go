@@ -11,38 +11,63 @@ import (
 type contextkey string
 
 var (
-	JWTCtxKey contextkey = "jwt"
+	JWTCtxKey        contextkey = "jwt"
+	JWTPayloadCtxKey contextkey = "jwt-payload"
 )
 
 // HasValidJWT is a middleware that checks if the request contains a valid jwt
 // authorization bearer token.
-func HasValidJWT(notAuthorizedHandler, next http.HandlerFunc) func(next http.Handler) http.Handler {
+func HasValidJWT(notAuthorizedHandler http.HandlerFunc) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			jwtPayload, err := retrieveJWTFromHeader(w, r, notAuthorizedHandler)
+			jwtToken, jwtPayload, err := retrieveJWTFromHeader(w, r, notAuthorizedHandler)
 			if err != nil {
 				notAuthorizedHandler(w, r)
 				return
 			}
-			ctx := context.WithValue(r.Context(), JWTCtxKey, jwtPayload)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			jwtCtx := context.WithValue(r.Context(), JWTCtxKey, jwtToken)
+			jwtPayloadCtx := context.WithValue(jwtCtx, JWTPayloadCtxKey, jwtPayload)
+			next.ServeHTTP(w, r.WithContext(jwtPayloadCtx))
+		})
+	}
+}
+
+// JWTIndexIS is a middleware that checks if the decoded jwt payload in the authorization
+// bearer header index matches a particular values.
+//
+// e.g JWTIndexIS("role", "admin", notAuthorizedHandler)
+func JWTIndexIS(index string, value interface{}, notAuthorizedHandler http.HandlerFunc) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			jwtToken, jwtPayload, err := retrieveJWTFromHeader(w, r, notAuthorizedHandler)
+			if err != nil {
+				notAuthorizedHandler(w, r)
+				return
+			}
+			if jwtPayload[index] != value {
+				notAuthorizedHandler(w, r)
+				return
+			}
+			jwtCtx := context.WithValue(r.Context(), JWTCtxKey, jwtToken)
+			jwtPayloadCtx := context.WithValue(jwtCtx, JWTPayloadCtxKey, jwtPayload)
+			next.ServeHTTP(w, r.WithContext(jwtPayloadCtx))
 		})
 	}
 }
 
 // retrieveJWTFromHeader retrieves the jwt token from the http 'Authorization'
 // header.
-func retrieveJWTFromHeader(w http.ResponseWriter, r *http.Request, notAuthorizedHandler http.HandlerFunc) (map[string]interface{}, error) {
+func retrieveJWTFromHeader(w http.ResponseWriter, r *http.Request, notAuthorizedHandler http.HandlerFunc) (string, map[string]interface{}, error) {
 	authorization := r.Header.Get("Authorization")
 	if len(authorization) < len("Bearer ")+1 {
 		notAuthorizedHandler(w, r)
-		return nil, errors.New("No jwt in authorization header")
+		return "", nil, errors.New("No jwt in authorization header")
 	}
 	jwtTokenString := authorization[len("Bearer "):]
 	jwtClaims, err := hs256.Decode(jwtTokenString)
 	if err != nil {
 		notAuthorizedHandler(w, r)
-		return nil, err
+		return "", nil, err
 	}
-	return jwtClaims, nil
+	return jwtTokenString, jwtClaims, nil
 }

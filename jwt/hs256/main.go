@@ -12,6 +12,9 @@ var secretKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 
 // Encode encodes a jwt token using data gotten from payload.
 func Encode(payload map[string]interface{}) (tokenString string, err error) {
+	if string(secretKey) == "" {
+		return "", errors.New("No 'JWT_SECRET_KEY' value in environment variables")
+	}
 	claims := jwt.MapClaims{
 		"iat": time.Now(),
 	}
@@ -27,6 +30,9 @@ func Encode(payload map[string]interface{}) (tokenString string, err error) {
 //
 // If the jwt token is invalid it returns an error.
 func Decode(tokenString string) (claims map[string]interface{}, err error) {
+	if string(secretKey) == "" {
+		return nil, errors.New("No 'JWT_SECRET_KEY' value in environment variables")
+	}
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return "", errors.New("Invalid jwt token string")

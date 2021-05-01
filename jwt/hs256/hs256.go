@@ -8,11 +8,10 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-var secretKey = []byte(os.Getenv("JWT_SECRET_KEY"))
-
 // Encode encodes a jwt token using data gotten from payload.
 func Encode(payload map[string]interface{}) (tokenString string, err error) {
-	if string(secretKey) == "" {
+	secretKey := getSecret()
+	if len(secretKey) < 1 {
 		return "", errors.New("No 'JWT_SECRET_KEY' value in environment variables")
 	}
 	claims := jwt.MapClaims{
@@ -30,7 +29,8 @@ func Encode(payload map[string]interface{}) (tokenString string, err error) {
 //
 // If the jwt token is invalid it returns an error.
 func Decode(tokenString string) (claims map[string]interface{}, err error) {
-	if string(secretKey) == "" {
+	secretKey := getSecret()
+	if len(secretKey) < 1 {
 		return nil, errors.New("No 'JWT_SECRET_KEY' value in environment variables")
 	}
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -48,4 +48,9 @@ func Decode(tokenString string) (claims map[string]interface{}, err error) {
 	}
 	err = errors.New("An unknowm error occured while decoding jwt")
 	return
+}
+
+func getSecret() (secret []byte) {
+	secret = []byte(os.Getenv("JWT_SECRET_KEY"))
+	return secret
 }

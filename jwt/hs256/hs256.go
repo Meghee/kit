@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt"
 )
 
 // Encode encodes a jwt token using data gotten from payload.

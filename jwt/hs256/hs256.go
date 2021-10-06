@@ -3,9 +3,8 @@ package hs256
 import (
 	"errors"
 	"os"
-	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // Encode encodes a jwt token using data gotten from payload.
@@ -14,9 +13,7 @@ func Encode(payload map[string]interface{}) (tokenString string, err error) {
 	if len(secretKey) < 1 {
 		return "", errors.New("No 'JWT_SECRET_KEY' value in environment variables")
 	}
-	claims := jwt.MapClaims{
-		"iat": time.Now(),
-	}
+	claims := jwt.MapClaims{}
 	for k, v := range payload {
 		claims[k] = v
 	}
